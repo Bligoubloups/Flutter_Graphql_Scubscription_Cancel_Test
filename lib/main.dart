@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 ValueNotifier<GraphQLClient> client;
+WebSocketLink webSocketLink;
 void main() {
   final HttpLink httpLink = HttpLink(
-    'http://YOUR_IP_ADDRESS:6001/graphql',
+    'http://192.168.1.11:6001/graphql',
   );
 
-  final WebSocketLink webSocketLink = WebSocketLink(
-    'ws://YOUR_IP_ADDRESS:6001/graphql',
+  webSocketLink = WebSocketLink(
+    'ws://192.168.1.11:6001/graphql',
     config: SocketClientConfig(
       initialPayload: () async => <dynamic, dynamic>{
         "connectionParams": {
@@ -36,16 +37,19 @@ class Main extends StatefulWidget {
 }
 
 class _MainState extends State<Main> {
-  bool shouldRenderSub;
+  bool _shouldRenderSub;
 
   @override
   void initState() {
     super.initState();
-    shouldRenderSub = false;
+    _shouldRenderSub = false;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_shouldRenderSub == false) {
+      webSocketLink.dispose();
+    }
     return GraphQLProvider(
       client: client,
       child: MaterialApp(
@@ -59,14 +63,15 @@ class _MainState extends State<Main> {
                 child: RaisedButton(
                   onPressed: () {
                     setState(() {
-                      shouldRenderSub = !shouldRenderSub;
+                      _shouldRenderSub = !_shouldRenderSub;
                     });
                   },
-                  child:
-                      shouldRenderSub ? Text("Unsubscribe") : Text("Subscribe"),
+                  child: _shouldRenderSub
+                      ? Text("Unsubscribe")
+                      : Text("Subscribe"),
                 ),
               ),
-              if (shouldRenderSub) SubscribeWidget(),
+              if (_shouldRenderSub) SubscribeWidget(),
             ],
           ),
         ),
@@ -76,10 +81,6 @@ class _MainState extends State<Main> {
 }
 
 class SubscribeWidget extends StatelessWidget {
-  const SubscribeWidget({
-    Key key,
-  }) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return Center(
