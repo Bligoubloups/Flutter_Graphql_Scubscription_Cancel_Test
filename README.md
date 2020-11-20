@@ -18,3 +18,9 @@ In the logs of nodejs, you ll see CONNECTED but never DISCONNECTED.
 
 To create the Subscription, simply clic on Subscribe.  
 To unmount it, clic on Unsubscribe
+
+
+### Solution
+
+Solution on the branch solution.
+But not sure if its the right way to do it.
