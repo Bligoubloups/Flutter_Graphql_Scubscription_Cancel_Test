@@ -47,9 +47,9 @@ class _MainState extends State<Main> {
 
   @override
   Widget build(BuildContext context) {
-    if (_shouldRenderSub == false) {
-      webSocketLink.dispose();
-    }
+    // if (_shouldRenderSub == false) {
+    //   webSocketLink.dispose();
+    // }
     return GraphQLProvider(
       client: client,
       child: MaterialApp(
@@ -71,6 +71,7 @@ class _MainState extends State<Main> {
                       : Text("Subscribe"),
                 ),
               ),
+              QueryWidget(),
               if (_shouldRenderSub) SubscribeWidget(),
             ],
           ),
@@ -80,7 +81,12 @@ class _MainState extends State<Main> {
   }
 }
 
-class SubscribeWidget extends StatelessWidget {
+class SubscribeWidget extends StatefulWidget {
+  @override
+  _SubscribeWidgetState createState() => _SubscribeWidgetState();
+}
+
+class _SubscribeWidgetState extends State<SubscribeWidget> {
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -93,13 +99,76 @@ class SubscribeWidget extends StatelessWidget {
           '''),
           variables: null,
         ),
+        // onSubscriptionResult: (_, __) => {print("fewf")},
         builder: (result) {
           if (result.isLoading) {
             return const CircularProgressIndicator();
           }
-          return Text("We dont care about that");
+          return Text(result.data['value'].toString());
         },
       ),
+    );
+  }
+}
+
+class QueryWidget extends StatefulWidget {
+  const QueryWidget({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  _QueryWidgetState createState() => _QueryWidgetState();
+}
+
+class _QueryWidgetState extends State<QueryWidget> {
+  bool _shouldRenderQuery;
+
+  @override
+  void initState() {
+    super.initState();
+    _shouldRenderQuery = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        RaisedButton(
+          onPressed: () {
+            setState(() {
+              _shouldRenderQuery = !_shouldRenderQuery;
+            });
+          },
+          child: _shouldRenderQuery ? Text("Remove Query") : Text("Query"),
+        ),
+        _shouldRenderQuery
+            ? Query(
+                options: QueryOptions(
+                  document: gql(r'''
+              query publishQuery {
+                publishQuery
+              }
+              '''),
+                  variables: null,
+                ),
+                builder: (QueryResult result,
+                    {VoidCallback refetch, FetchMore fetchMore}) {
+                  if (result.hasException) {
+                    return Text(result.exception.toString());
+                  }
+
+                  if (result.isLoading) {
+                    return Text('Query Loading');
+                  }
+
+                  // it can be either Map or List
+                  int response = result.data['publishQuery'];
+
+                  return Text(response.toString());
+                },
+              )
+            : Container(),
+      ],
     );
   }
 }

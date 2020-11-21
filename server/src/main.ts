@@ -3,24 +3,47 @@ import { PubSub } from "apollo-server";
 
 const pubsub = new PubSub();
 
+let number = 1;
+
 const typeDefs = gql`
   type Subscription {
     value: Int
   }
   type Query {
-    weDontCare_need_for_root: Int
+    publishQuery: Int
   }
 `;
+
+function withCancel<T>(
+  asyncIterator: AsyncIterator<T | undefined>,
+  onCancel: () => void
+) {
+  let saved_return = asyncIterator.return;
+
+  asyncIterator.return = () => {
+    onCancel();
+    return saved_return
+      ? saved_return.call(asyncIterator)
+      : Promise.resolve({ value: undefined, done: true });
+  };
+
+  return asyncIterator;
+}
 
 const resolvers = {
   Subscription: {
     value: {
-      subscribe: () => pubsub.asyncIterator(["SUB"]),
+      subscribe: () =>
+        withCancel(pubsub.asyncIterator("SUB"), () => {
+          console.log(`Subscription closed, do your cleanup`);
+        }),
+      // subscribe: () => pubsub.asyncIterator("SUB"),
     },
   },
   Query: {
-    weDontCare_need_for_root() {
-      return 1;
+    publishQuery() {
+      pubsub.publish("SUB", { value: number++ });
+      return number;
     },
   },
 };
