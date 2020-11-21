@@ -24,3 +24,8 @@ To unmount it, clic on Unsubscribe
 
 Solution on the branch solution.
 But not sure if its the right way to do it.
+
+### Do not close websockets manually
+
+Instead of closing the websocket, flutter-graphql actually closes the subscription.
+We handle what happens in backend when a subscription is closed in the branch: closing-subscription-only
